@@ -3,12 +3,6 @@ AWS Environment Cleanup Utility
 <strong>A robust, automated script for comprehensive AWS resource cleanup and cost management.</strong>
 </p>
 
-<p align="center">
-<img src="https://www.google.com/search?q=https://img.shields.io/badge/Shell_Script-121011%3Fstyle%3Dfor-the-badge%26logo%3Dgnu-bash%26logoColor%3Dwhite" alt="Language: Bash" />
-<img src="https://www.google.com/search?q=https://img.shields.io/badge/AWS-232F3E%3Fstyle%3Dfor-the-badge%26logo%3Damazon-aws%26logoColor%3Dwhite" alt="Platform: AWS" />
-<img src="https://www.google.com/search?q=https://img.shields.io/badge/License-MIT-yellow.svg%3Fstyle%3Dfor-the-badge" alt="License: MIT" />
-</p>
-
 This utility provides a powerful solution for organizations to maintain clean and cost-effective AWS accounts by systematically removing unused and non-critical resources. It is designed with safety as a primary concern, defaulting to a dry-run mode and offering tag-based exclusion to protect essential assets.
 
 The script is ideal for managing non-production environments (Dev, QA, Staging) where resource sprawl can lead to significant, unnecessary costs.

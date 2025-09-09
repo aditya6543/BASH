@@ -1,87 +1,113 @@
-AWS Universal Cleanup Script (Non-EC2)
-This script is a powerful tool designed to perform an aggressive cleanup of common, non-EC2 resources across all available AWS regions in an account. Its primary purpose is to help reduce cloud costs by finding and deleting lingering resources that are often forgotten after testing or development.
+<div align="center">
 
-The script is built with safety as a priority, defaulting to a "dry run" mode and providing a mechanism to protect specific resources from deletion.
+🌊 AWS Universal Cleanup Script 🌊
+(Non-EC2)
 
-⚠️ EXTREMELY DESTRUCTIVE SCRIPT ⚠️
-This script is designed to PERMANENTLY DELETE AWS resources. When run in --execute mode, the actions are irreversible.
+</div>
 
-Always run in dry-run mode first to review the resources targeted for deletion.
+<div align="center">
 
-Use the --keep-tag feature to protect critical infrastructure.
+</div>
 
-The author is not responsible for any accidental data loss or infrastructure destruction. USE AT YOUR OWN RISK.
+This script is a powerful tool designed to perform an aggressive cleanup of common, non-EC2 resources across all available AWS regions. Its primary purpose is to help reduce cloud costs by finding and deleting lingering resources that are often forgotten after testing or development.
 
-Features
-The script systematically scans all AWS regions and deletes the following resources:
+It's built with safety as a priority, defaulting to a "dry run" mode and providing a robust mechanism to protect specific resources from deletion.
 
-Global:
+⚠️ DANGER: EXTREMELY DESTRUCTIVE SCRIPT ⚠️
+-  This script is designed to PERMANENTLY DELETE AWS resources.
+-  When run in '--execute' mode, the actions are IRREVERSIBLE.
+!  Always run in dry-run mode first to review what will be deleted.
+!  Use the '--keep-tag' feature to protect critical infrastructure.
+!  USE AT YOUR OWN RISK.
 
-S3 Buckets (will attempt to empty them first)
+Table of Contents
+✨ Features
 
-Per-Region:
+❌ What It Does NOT Delete
 
-Unattached Elastic IPs (EIPs)
+📋 Prerequisites
 
-NAT Gateways
+🚀 Usage Guide
 
-ELBv2 Load Balancers (ALB/NLB)
+⚙️ Command-Line Flags
 
-RDS DB Instances & Clusters (skips final snapshot)
+📜 License
 
-Manual RDS Snapshots
+✨ Features
+The script systematically scans all AWS regions to find and delete resources.
 
-Redshift Clusters (skips final snapshot)
+<details>
+<summary><strong>Click to expand the full list of targeted resources</strong></summary>
 
-ElastiCache Clusters & Snapshots
+🌐 Global:
 
-EFS File Systems (and their mount targets)
+✅ S3 Buckets (attempts to empty them first)
 
-ECR Repositories (forced delete)
+📍 Per-Region:
 
-EKS Clusters (and their nodegroups)
+✅ Unattached Elastic IPs (EIPs)
 
-ECS Clusters, Services, and Tasks
+✅ NAT Gateways
 
-Lambda Functions
+✅ ELBv2 Load Balancers (ALB/NLB)
 
-API Gateway v1 (REST) and v2 (HTTP/WebSocket)
+✅ RDS DB Instances & Clusters (skips final snapshot)
 
-CloudFormation Stacks
+✅ Manual RDS Snapshots
 
-CodeCommit, CodeBuild, and CodePipeline resources
+✅ Redshift Clusters (skips final snapshot)
 
-SQS Queues, SNS Topics, and Step Functions State Machines
+✅ ElastiCache Clusters & Snapshots
 
-CloudWatch Log Groups
+✅ EFS File Systems (and their mount targets)
 
-EC2 Snapshots not attached to a current AMI
+✅ ECR Repositories (forced delete)
 
-Active EMR Clusters
+✅ EKS Clusters (and their nodegroups)
 
-What It Does NOT Delete (By Design)
+✅ ECS Clusters, Services, and Tasks
+
+✅ Lambda Functions
+
+✅ API Gateway v1 (REST) and v2 (HTTP/WebSocket)
+
+✅ CloudFormation Stacks
+
+✅ CodeCommit, CodeBuild, and CodePipeline resources
+
+✅ SQS Queues, SNS Topics, and Step Functions State Machines
+
+✅ CloudWatch Log Groups
+
+✅ EC2 Snapshots not attached to a current AMI
+
+✅ Active EMR Clusters
+
+</details>
+
+❌ What It Does NOT Delete (By Design)
 To prevent breaking active environments, this script intentionally ignores:
 
-EC2 Instances
+❌ EC2 Instances
 
-EBS Volumes (especially those attached to instances)
+❌ EBS Volumes (especially those attached to instances)
 
-VPCs, Subnets, Security Groups, Route Tables (high risk of breaking dependencies)
+❌ VPCs, Subnets, Security Groups, Route Tables (high risk of breaking dependencies)
 
-IAM Users, Roles, Policies, and Groups
+❌ IAM Users, Roles, Policies, and Groups
 
-Route53 Hosted Zones and Records
+❌ Route53 Hosted Zones and Records
 
-AWS Organizations or Account-level settings
+❌ AWS Organizations or Account-level settings
 
-Any resource protected by the --keep-tag flag.
+🛡️ Any resource protected by the --keep-tag flag.
 
-Prerequisites
+📋 Prerequisites
 Bash: The script must be run with bash, not sh or dash.
 
 AWS CLI v2: Ensure the AWS CLI is installed and accessible in your PATH.
 
-Configured AWS Credentials: Your environment must be configured with AWS credentials that have sufficient permissions to list and delete all the resources listed in the "Features" section. This can be done via:
+Configured AWS Credentials: Your environment must have credentials with permissions to list and delete all the resources listed above. This can be done via:
 
 aws configure (profile in ~/.aws/credentials)
 
@@ -89,42 +115,39 @@ Environment variables (AWS_ACCESS_KEY_ID, etc.)
 
 An EC2 Instance Role
 
-Usage
-Make the script executable:
-
+🚀 Usage Guide
+1. Make the script executable
 chmod +x aws-cleanup-except-ec2.sh
 
-Dry Run (Safe Mode - Recommended First Step):
-This will print all the commands that would be executed without actually deleting anything. Use this to review the "kill list".
+2. Run a Dry Run (Safe Mode ✅)
+This is the recommended first step. It will print all the commands that would be executed without actually deleting anything. Review this "kill list" carefully.
 
 ./aws-cleanup-except-ec2.sh
 
 Output will be prefixed with [DRY-RUN] in green.
 
-Protecting Resources with a Tag:
-The script's most important safety feature is the --keep-tag. Any resource that has this exact key-value tag will be skipped.
+3. Protect Critical Resources (Safety Shield 🛡️)
+Use the --keep-tag flag to protect any resource with a specific tag. This is the script's most important safety feature.
 
 # Dry run, but simulate skipping any resource tagged with 'Protect=true'
 ./aws-cleanup-except-ec2.sh --keep-tag "Protect=true"
 
 You will see [SKIP] messages for any resources that have this tag.
 
-Execute Mode (DESTRUCTIVE):
+4. Execute Deletion (Destructive Mode 🔥)
 Once you have reviewed the dry run and are certain you want to proceed, add the --execute flag.
-
-Warning: This is the final step. There is no confirmation prompt after this.
 
 # Run deletion, but protect resources tagged 'Project=CriticalApp'
 ./aws-cleanup-except-ec2.sh --execute --keep-tag "Project=CriticalApp"
 
 Output for deletion commands will be prefixed with [EXECUTE] in red.
 
-Command-Line Flags
+⚙️ Command-Line Flags
 --execute: Switches the script from its default dry-run mode to live execution mode.
 
---keep-tag KEY=VALUE: Specifies a tag to identify resources that should NOT be deleted. The script will skip any resource that has this tag.
+--keep-tag KEY=VALUE: Specifies a tag to identify resources that should NOT be deleted.
 
 --help, -h: Displays a brief usage message.
 
-License
+📜 License
 This project is licensed under the MIT License.

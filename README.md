@@ -1,180 +1,130 @@
-AWS Environment Cleanup Utility
-<p align="center">
-<strong>A robust, automated script for comprehensive AWS resource cleanup and cost management.</strong>
-</p>
+AWS Universal Cleanup Script (Non-EC2)
+This script is a powerful tool designed to perform an aggressive cleanup of common, non-EC2 resources across all available AWS regions in an account. Its primary purpose is to help reduce cloud costs by finding and deleting lingering resources that are often forgotten after testing or development.
 
-This utility provides a powerful solution for organizations to maintain clean and cost-effective AWS accounts by systematically removing unused and non-critical resources. It is designed with safety as a primary concern, defaulting to a dry-run mode and offering tag-based exclusion to protect essential assets.
+The script is built with safety as a priority, defaulting to a "dry run" mode and providing a mechanism to protect specific resources from deletion.
 
-The script is ideal for managing non-production environments (Dev, QA, Staging) where resource sprawl can lead to significant, unnecessary costs.
+⚠️ EXTREMELY DESTRUCTIVE SCRIPT ⚠️
+This script is designed to PERMANENTLY DELETE AWS resources. When run in --execute mode, the actions are irreversible.
 
-Table of Contents
-Urgent Security Warning
+Always run in dry-run mode first to review the resources targeted for deletion.
 
-Core Features
+Use the --keep-tag feature to protect critical infrastructure.
 
-Business Use Cases
+The author is not responsible for any accidental data loss or infrastructure destruction. USE AT YOUR OWN RISK.
 
-System Prerequisites
+Features
+The script systematically scans all AWS regions and deletes the following resources:
 
-Installation and Configuration
+Global:
 
-Operational Guide
+S3 Buckets (will attempt to empty them first)
 
-Scope of Operations
+Per-Region:
 
-Contributing
+Unattached Elastic IPs (EIPs)
 
-License
+NAT Gateways
 
-⚠️ Urgent Security Warning
-RISK OF PERMANENT DATA LOSS
+ELBv2 Load Balancers (ALB/NLB)
 
-This script is a powerful and destructive tool designed to permanently delete resources from your AWS account. Operations are irreversible.
+RDS DB Instances & Clusters (skips final snapshot)
 
-Mandatory First Step: Always execute in the default dry-run mode to audit the list of resources targeted for deletion.
+Manual RDS Snapshots
 
-Verify Target Account: Ensure your AWS CLI is configured for the correct account and region before execution.
+Redshift Clusters (skips final snapshot)
 
-Implement Safeguards: Utilize the --keep-tag functionality to create a clear "safe list" of resources that must not be deleted.
+ElastiCache Clusters & Snapshots
 
-Disclaimer of Liability: The use of this script is entirely at your own risk. The authors and contributors are not liable for any data loss or financial damages incurred.
+EFS File Systems (and their mount targets)
 
-Core Features
-Operational Safety: Defaults to a secure dry-run mode. The --execute flag is required for all destructive operations.
+ECR Repositories (forced delete)
 
-Global & Regional Scope: Automatically discovers and operates across all active AWS regions to ensure comprehensive cleanup.
+EKS Clusters (and their nodegroups)
 
-Resource Exclusion: Protect critical assets from deletion using a simple, tag-based exclusion mechanism (--keep-tag KEY=VALUE).
+ECS Clusters, Services, and Tasks
 
-Intelligent Operation: Intentionally preserves core infrastructure such as EC2 instances, VPCs, Subnets, and IAM roles to prevent service disruption.
+Lambda Functions
 
-Asynchronous Handling: Employs AWS CLI wait commands to manage dependencies and ensure long-running deletions complete successfully.
+API Gateway v1 (REST) and v2 (HTTP/WebSocket)
 
-Business Use Cases
-Cost Optimization: Drastically reduce monthly AWS bills by eliminating orphaned and unused resources in development and testing accounts.
+CloudFormation Stacks
 
-Security Hygiene: Reduce the potential attack surface by removing old, unpatched, or unmonitored resources.
+CodeCommit, CodeBuild, and CodePipeline resources
 
-Environment Management: Easily reset testing or QA environments to a clean slate, ensuring repeatable and consistent deployments.
+SQS Queues, SNS Topics, and Step Functions State Machines
 
-System Prerequisites
-Bash Environment: Version 4.0 or newer.
+CloudWatch Log Groups
 
-AWS CLI: Version 2.x is required.
+EC2 Snapshots not attached to a current AMI
 
-Configured AWS Credentials: The script uses the AWS credentials configured in your environment. For details, see the AWS CLI Configuration Guide.
+Active EMR Clusters
 
-Installation and Configuration
-Clone the Repository:
-
-git clone <your-repo-url>
-cd <your-repo-directory>
-
-Set Execute Permissions:
-
-chmod +x aws-cleanup-except-ec2.sh
-
-Configure AWS Profile (Optional):
-The script uses your default AWS CLI profile. To use a specific profile, set the AWS_PROFILE environment variable:
-
-export AWS_PROFILE="your-profile-name"
-
-Operational Guide
-Step 1: Audit Resources (Dry Run)
-Execute the script in its default mode to generate a non-destructive report of resources that will be deleted.
-
-./aws-cleanup-except-ec2.sh
-
-Sample Output:
-
-=== AWS CLEANUP SCRIPT (excludes EC2) ===
-DRY_RUN: true
-
->>> Processing region: us-east-1
-[DRY-RUN] aws ec2 release-address --allocation-id eipalloc-0123456789abcdef --region us-east-1
-[DRY-RUN] aws rds delete-db-instance --db-instance-identifier my-test-db --skip-final-snapshot --region us-east-1
-...
-
-Step 2: Execute Deletion
-After carefully reviewing the dry-run output, proceed with the deletion using the --execute flag.
-
-./aws-cleanup-except-ec2.sh --execute
-
-Step 3: Protect Critical Assets (Recommended)
-To exclude specific resources from deletion, apply a consistent tag (e.g., Status=Protected) to them in the AWS Console and use the --keep-tag flag.
-
-# This command will not touch any resource tagged with "Status=Protected"
-./aws-cleanup-except-ec2.sh --execute --keep-tag "Status=Protected"
-
-Scope of Operations
-The script is architected to be both comprehensive and safe. The following tables outline what is and is not in scope for deletion.
-
-✅ Resources Targeted for Deletion
-
-Details
-
-S3
-
-Buckets and Objects
-
-EC2-related
-
-Unattached Elastic IPs, NAT Gateways, Unused Snapshots
-
-Databases
-
-RDS Instances/Clusters, Redshift, ElastiCache
-
-Containers
-
-EKS Clusters/Nodegroups, ECR Repos, ECS Clusters
-
-Serverless
-
-Lambda Functions, API Gateways (v1 & v2)
-
-DevOps
-
-CloudFormation, CodeCommit, CodeBuild, CodePipeline
-
-Messaging
-
-SQS Queues, SNS Topics
-
-Other
-
-EFS, Step Functions, CloudWatch Logs, EMR Clusters
-
-❌ Resources Intentionally Preserved
-
-Details
-
-Compute
+What It Does NOT Delete (By Design)
+To prevent breaking active environments, this script intentionally ignores:
 
 EC2 Instances
 
-Networking
+EBS Volumes (especially those attached to instances)
 
-VPCs, Subnets, Security Groups, Route Tables
+VPCs, Subnets, Security Groups, Route Tables (high risk of breaking dependencies)
 
-Storage
+IAM Users, Roles, Policies, and Groups
 
-Attached EBS Volumes
+Route53 Hosted Zones and Records
 
-Identity
+AWS Organizations or Account-level settings
 
-All IAM Resources (Users, Roles, Policies)
+Any resource protected by the --keep-tag flag.
 
-DNS
+Prerequisites
+Bash: The script must be run with bash, not sh or dash.
 
-Route53 Hosted Zones and Domains
+AWS CLI v2: Ensure the AWS CLI is installed and accessible in your PATH.
 
-Account
+Configured AWS Credentials: Your environment must be configured with AWS credentials that have sufficient permissions to list and delete all the resources listed in the "Features" section. This can be done via:
 
-AWS Organizations, Service Control Policies (SCPs)
+aws configure (profile in ~/.aws/credentials)
 
-Contributing
-Contributions from the community are welcome. Please open an issue to discuss significant changes before submitting a pull request. We recommend using shellcheck to lint script contributions.
+Environment variables (AWS_ACCESS_KEY_ID, etc.)
+
+An EC2 Instance Role
+
+Usage
+Make the script executable:
+
+chmod +x aws-cleanup-except-ec2.sh
+
+Dry Run (Safe Mode - Recommended First Step):
+This will print all the commands that would be executed without actually deleting anything. Use this to review the "kill list".
+
+./aws-cleanup-except-ec2.sh
+
+Output will be prefixed with [DRY-RUN] in green.
+
+Protecting Resources with a Tag:
+The script's most important safety feature is the --keep-tag. Any resource that has this exact key-value tag will be skipped.
+
+# Dry run, but simulate skipping any resource tagged with 'Protect=true'
+./aws-cleanup-except-ec2.sh --keep-tag "Protect=true"
+
+You will see [SKIP] messages for any resources that have this tag.
+
+Execute Mode (DESTRUCTIVE):
+Once you have reviewed the dry run and are certain you want to proceed, add the --execute flag.
+
+Warning: This is the final step. There is no confirmation prompt after this.
+
+# Run deletion, but protect resources tagged 'Project=CriticalApp'
+./aws-cleanup-except-ec2.sh --execute --keep-tag "Project=CriticalApp"
+
+Output for deletion commands will be prefixed with [EXECUTE] in red.
+
+Command-Line Flags
+--execute: Switches the script from its default dry-run mode to live execution mode.
+
+--keep-tag KEY=VALUE: Specifies a tag to identify resources that should NOT be deleted. The script will skip any resource that has this tag.
+
+--help, -h: Displays a brief usage message.
 
 License
-This project is licensed under the MIT License. See the LICENSE file for details.
+This project is licensed under the MIT License.
